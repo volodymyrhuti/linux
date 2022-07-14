@@ -745,7 +745,11 @@ static int rtm_to_fib_config(struct net *net, struct sk_buff *skb,
 		err = -EINVAL;
 		goto errout;
 	}
-	cfg->fc_dscp = inet_dsfield_to_dscp(rtm->rtm_tos);
+
+        if (rtm->rtm_flags & RTM_F_DSCP)
+            cfg->fc_edscp = inet_dsfield_to_dscp(rtm->rtm_tos);
+        else
+            cfg->fc_idscp = inet_dsfield_to_dscp(rtm->rtm_tos);
 
 	cfg->fc_dst_len = rtm->rtm_dst_len;
 	cfg->fc_table = rtm->rtm_table;

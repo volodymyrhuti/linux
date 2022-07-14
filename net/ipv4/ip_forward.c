@@ -39,6 +39,8 @@
 #include <linux/route.h>
 #include <net/route.h>
 #include <net/xfrm.h>
+#include <linux/inetdevice.h>
+#include <trace/events/fib.h>
 
 static bool ip_exceeds_mtu(const struct sk_buff *skb, unsigned int mtu)
 {
@@ -82,6 +84,52 @@ static int ip_forward_finish(struct net *net, struct sock *sk, struct sk_buff *s
 	skb_clear_tstamp(skb);
 	return dst_output(net, sk, skb);
 }
+
+#ifdef CONFIG_IP_ROUTE_QPPB
+static void ip_mark_qppb(struct net *net, struct sk_buff *skb,
+			 struct iphdr *iph, struct rtable *rt)
+{
+	struct flowi4 fl4 = {
+		.flowi4_iif = inet_iif(skb),
+		.daddr = iph->saddr,
+		.saddr = iph->daddr,
+	};
+	struct fib_table *local;
+	struct fib_result res;
+	int err, qppb_mode;
+
+	qppb_mode = IN_DEV_QPPB_MODE(__in_dev_get_rcu(skb->dev));
+	switch (qppb_mode) {
+	case 1:
+		pr_devel("QPPB mark dst [dscp=%d, dst=%pI4, src=%pI4]",
+			 rt->dst.edscp, &fl4.saddr, &fl4.daddr);
+		ipv4_change_dsfield(iph, 0, rt->dst.edscp);
+		break;
+	case 2:
+		local = fib_get_table(net, RT_TABLE_LOCAL);
+		if (unlikely(!local))
+			return;
+
+		// trace_fib_table_lookup(local->tb_id, &fl4, NULL, 0);
+		err = fib_table_lookup(local, &fl4, &res, FIB_LOOKUP_NOREF);
+		if (err) {
+			pr_err("QPPB failed mark src "
+			       "[dst=%pI4, src=%pI4, iif=%d, err=%d]",
+			       &fl4.daddr, &fl4.saddr, fl4.flowi4_iif, err);
+			return;
+		}
+
+		pr_devel("QPPB mark src [dscp=%d, dst=%pI4, src=%pI4]",
+			 res.edscp, &fl4.daddr, &fl4.saddr);
+		ipv4_change_dsfield(iph, 0, res.edscp);
+		break;
+	case 0:
+		return;
+	default:
+		pr_err("Invalid QPPB mode %d\n", qppb_mode);
+	}
+}
+#endif
 
 int ip_forward(struct sk_buff *skb)
 {
@@ -157,6 +205,9 @@ int ip_forward(struct sk_buff *skb)
 	    !skb_sec_path(skb))
 		ip_rt_send_redirect(skb);
 
+#ifdef CONFIG_IP_ROUTE_QPPB
+	ip_mark_qppb(net, skb, iph, rt);
+#endif
 	if (net->ipv4.sysctl_ip_fwd_update_priority)
 		skb->priority = rt_tos2priority(iph->tos);
 

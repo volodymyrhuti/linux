@@ -12,6 +12,7 @@ struct fib_alias {
 	struct hlist_node	fa_list;
 	struct fib_info		*fa_info;
 	dscp_t			fa_dscp;
+	dscp_t			fa_edscp;
 	u8			fa_type;
 	u8			fa_state;
 	u8			fa_slen;

@@ -1410,6 +1410,18 @@ mc_forwarding - BOOLEAN
 	conf/all/mc_forwarding must also be set to TRUE to enable multicast
 	routing	for the interface
 
+qppb_mode - INTEGER
+	Enable trafic marking using the previosly associated dscp.
+	The marking value is originated by the frr route-map rules.
+
+	Default: 0 (No marking)
+
+	Possible values:
+
+	- 0 - Marking dissabled.
+	- 1 - Perform table lookup on the packets' destination address
+	- 2 - Perform table lookup on the packets' source address
+
 medium_id - INTEGER
 	Integer value used to differentiate the devices by the medium they
 	are attached to. Two devices can have different id values when

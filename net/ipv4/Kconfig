@@ -89,6 +89,15 @@ config IP_ROUTE_MULTIPATH
 	  equal "cost" and chooses one of them in a non-deterministic fashion
 	  if a matching packet arrives.
 
+config IP_ROUTE_QPPB
+	bool "IP: QPPB route marking"
+	depends on IP_ADVANCED_ROUTER
+	help
+	  The QPPB feature allows you to classify packets by IP precedence based
+	  on the BGP attributes. After the packets have been classified, you
+	  can use other QOS features to specify and enforce policies to fit
+	  your business model.
+
 config IP_ROUTE_VERBOSE
 	bool "IP: verbose route monitoring"
 	depends on IP_ADVANCED_ROUTER

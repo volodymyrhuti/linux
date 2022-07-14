@@ -25,7 +25,8 @@
 
 struct fib_config {
 	u8			fc_dst_len;
-	dscp_t			fc_dscp;
+	dscp_t			fc_idscp;
+	dscp_t			fc_edscp;
 	u8			fc_protocol;
 	u8			fc_scope;
 	u8			fc_type;
@@ -172,6 +173,7 @@ struct fib_result {
 	unsigned char		type;
 	unsigned char		scope;
 	u32			tclassid;
+	dscp_t			edscp;
 	struct fib_nh_common	*nhc;
 	struct fib_info		*fi;
 	struct fib_table	*table;
@@ -213,6 +215,7 @@ struct fib_rt_info {
 	__be32			dst;
 	int			dst_len;
 	dscp_t			dscp;
+	dscp_t			edscp;
 	u8			type;
 	u8			offload:1,
 				trap:1,
