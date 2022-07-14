@@ -1680,6 +1680,7 @@ struct rtable *rt_dst_clone(struct net_device *dev, struct rtable *rt)
 
 		new_rt->dst.input = rt->dst.input;
 		new_rt->dst.output = rt->dst.output;
+		new_rt->dst.edscp = rt->dst.edscp;
 		new_rt->dst.error = rt->dst.error;
 		new_rt->dst.lastuse = jiffies;
 		new_rt->dst.lwtstate = lwtstate_get(rt->dst.lwtstate);
@@ -1857,6 +1858,7 @@ static int __mkroute_input(struct sk_buff *skb,
 		else
 			rth = rcu_dereference(nhc->nhc_rth_input);
 		if (rt_cache_valid(rth)) {
+			rth->dst.edscp = res->edscp;
 			skb_dst_set_noref(skb, &rth->dst);
 			goto out;
 		}
@@ -1871,8 +1873,8 @@ static int __mkroute_input(struct sk_buff *skb,
 
 	rth->rt_is_input = 1;
 	RT_CACHE_STAT_INC(in_slow_tot);
-
 	rth->dst.input = ip_forward;
+	rth->dst.edscp = res->edscp;
 
 	rt_set_nexthop(rth, daddr, res, fnhe, res->fi, res->type, itag,
 		       do_cache);

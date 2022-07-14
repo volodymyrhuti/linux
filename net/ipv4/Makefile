@@ -16,6 +16,12 @@ obj-y     := route.o inetpeer.o protocol.o \
 	     inet_fragment.o ping.o ip_tunnel_core.o gre_offload.o \
 	     metrics.o netlink.o nexthop.o udp_tunnel_stub.o
 
+# ccflags-y += -O0
+ccflags-y += -DDEBUG -DDYNAMIC_DEBUG_MODULE
+ccflags-y += -fno-default-inline -fno-inline -fno-inline-small-functions \
+		-fno-indirect-inlining -fno-inline-functions-called-once
+ccflags-y += -O1 -g3 -ggdb3
+
 obj-$(CONFIG_BPFILTER) += bpfilter/
 
 obj-$(CONFIG_NET_IP_TUNNEL) += ip_tunnel.o

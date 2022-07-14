@@ -1236,7 +1236,7 @@ int fib_table_insert(struct net *net, struct fib_table *tb,
 		goto err;
 	}
 
-	dscp = cfg->fc_dscp;
+	dscp = cfg->fc_idscp;
 	l = fib_find_node(t, &tp, key);
 	fa = l ? fib_find_alias(&l->leaf, slen, dscp, fi->fib_priority,
 				tb->tb_id, false) : NULL;
@@ -1362,6 +1362,7 @@ int fib_table_insert(struct net *net, struct fib_table *tb,
 
 	new_fa->fa_info = fi;
 	new_fa->fa_dscp = dscp;
+	new_fa->fa_edscp = cfg->fc_edscp;
 	new_fa->fa_type = cfg->fc_type;
 	new_fa->fa_state = 0;
 	new_fa->fa_slen = slen;
@@ -1621,6 +1622,7 @@ set_result:
 			res->nh_sel = nhsel;
 			res->nhc = nhc;
 			res->type = fa->fa_type;
+			res->edscp = fa->fa_edscp;
 			res->scope = fi->fib_scope;
 			res->fi = fi;
 			res->table = tb;
@@ -1723,7 +1725,7 @@ int fib_table_delete(struct net *net, struct fib_table *tb,
 	if (!l)
 		return -ESRCH;
 
-	dscp = cfg->fc_dscp;
+	dscp = cfg->fc_idscp;
 	fa = fib_find_alias(&l->leaf, slen, dscp, 0, tb->tb_id, false);
 	if (!fa)
 		return -ESRCH;
@@ -2820,6 +2822,9 @@ static int fib_trie_seq_show(struct seq_file *seq, void *v)
 			if (fa->fa_dscp)
 				seq_printf(seq, " tos=%d",
 					   inet_dscp_to_dsfield(fa->fa_dscp));
+			if (fa->fa_edscp)
+				seq_printf(seq, " dscp=%d",
+					   inet_dscp_to_dsfield(fa->fa_edscp));
 			seq_putc(seq, '\n');
 		}
 	}

@@ -70,6 +70,7 @@ struct rtable {
 	__u8			rt_uses_gateway;
 
 	int			rt_iif;
+	int			rt_edscp;
 
 	u8			rt_gw_family;
 	/* Info on neighbour */
